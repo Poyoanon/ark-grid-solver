@@ -5,7 +5,7 @@ import { createEmptyCore, createEmptyAstrogem, getCoreSimpleIcon, generateId } f
 const config = useRuntimeConfig()
 const baseURL = config.app.baseURL
 
-const { solveArkGrid, getMaxPossibleScore } = useArkGridSolver()
+const { solveArkGrid, getMaxPossibleScore, getDestinyBonus } = useArkGridSolver()
 
 const STORAGE_KEY_CHARACTERS = 'arkgrid-characters'
 const STORAGE_KEY_ACTIVE_CHARACTER = 'arkgrid-active-character'
@@ -200,7 +200,11 @@ function getResultForCore(coreId: string): SolverResult | undefined {
 const orderAstrogems = computed(() => astrogems.value.filter(g => g.category === 'Order'))
 const chaosAstrogems = computed(() => astrogems.value.filter(g => g.category === 'Chaos'))
 
-const totalScore = computed(() => results.value.reduce((sum, r) => sum + r.score, 0))
+const totalScore = computed(() => {
+  const baseScore = results.value.reduce((sum, r) => sum + r.score, 0)
+  const destinyBonus = getDestinyBonus(cores.value, results.value)
+  return baseScore + destinyBonus
+})
 const maxPossible = computed(() => getMaxPossibleScore(cores.value))
 
 function resetAll() {

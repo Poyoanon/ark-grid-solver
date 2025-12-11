@@ -179,9 +179,28 @@ export function getMaxPossibleScore(cores: Core[]): number {
   return baseScore + destinyBonus
 }
 
+export function getDestinyBonus(cores: Core[], results: SolverResult[]): number {
+  const orderSunCore = cores.find(c => isOrderSunCore(c))
+  const orderMoonCore = cores.find(c => isOrderMoonCore(c))
+
+  if (!orderSunCore || !orderMoonCore) return 0
+
+  const sunResult = results.find(r => r.coreId === orderSunCore.id)
+  const moonResult = results.find(r => r.coreId === orderMoonCore.id)
+
+  if (!sunResult || !moonResult) return 0
+
+  if (sunResult.totalPoints >= 14 && moonResult.totalPoints >= 14) {
+    return SUN_MOON_DESTINY_BONUS
+  }
+
+  return 0
+}
+
 export function useArkGridSolver() {
   return {
     solveArkGrid,
-    getMaxPossibleScore
+    getMaxPossibleScore,
+    getDestinyBonus
   }
 }

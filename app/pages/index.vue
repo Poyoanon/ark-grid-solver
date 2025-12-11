@@ -13,6 +13,7 @@ const results = ref<SolverResult[]>([])
 const showResults = ref(false)
 const isCalculating = ref(false)
 const showAddGemModal = ref(false)
+const showResetModal = ref(false)
 
 onMounted(() => {
   const savedCores = localStorage.getItem(STORAGE_KEY_CORES)
@@ -124,6 +125,7 @@ function resetAll() {
   astrogems.value = []
   results.value = []
   showResults.value = false
+  showResetModal.value = false
 }
 </script>
 
@@ -147,7 +149,7 @@ function resetAll() {
         color="info"
         variant="subtle"
         title="How to use"
-        description="Add your cores (up to 6), then add all your available astrogems. Click 'Calculate Optimal Assignment' to find the best assignment that maximizes your breakpoint scores. Priority is given to 14p and 17p breakpoints."
+        description="Add your cores (up to 6), then add all your available astrogems. Click 'Calculate Optimal Assignment' to find the best assignment that maximizes your breakpoint scores. Priority is given to 14p and 17p breakpoints. This page saves all your cores and gems, so you can come back to it at a later time."
         class="mb-6"
       />
 
@@ -331,11 +333,48 @@ function resetAll() {
           color="neutral"
           variant="outline"
           icon="i-lucide-refresh-cw"
-          @click="resetAll"
+          @click="showResetModal = true"
         >
           Reset All
         </UButton>
       </div>
+
+      <UModal v-model:open="showResetModal">
+        <template #content>
+          <UCard :ui="{ root: 'border-2 border-red-500' }">
+            <template #header>
+              <div class="flex items-center gap-2 text-red-500">
+                <UIcon name="i-lucide-alert-triangle" />
+                <h3 class="text-lg font-semibold">
+                  Are you sure?
+                </h3>
+              </div>
+            </template>
+
+            <p class="text-gray-600 dark:text-gray-400">
+              This will delete all your current cores and gems.
+            </p>
+
+            <template #footer>
+              <div class="flex justify-end gap-3">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  @click="showResetModal = false"
+                >
+                  Cancel
+                </UButton>
+                <UButton
+                  color="error"
+                  @click="resetAll"
+                >
+                  Yes, Reset All
+                </UButton>
+              </div>
+            </template>
+          </UCard>
+        </template>
+      </UModal>
 
       <div
         v-if="showResults"

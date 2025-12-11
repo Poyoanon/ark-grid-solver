@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Core, Astrogem, SolverResult, CoreType, AstrogemCategory } from '~/types/arkgrid'
-import { createEmptyCore, createEmptyAstrogem, getCoreSimpleIcon, getCoreCategory } from '~/types/arkgrid'
+import { createEmptyCore, createEmptyAstrogem, getCoreSimpleIcon } from '~/types/arkgrid'
 
 const { solveArkGrid, getMaxPossibleScore } = useArkGridSolver()
 
@@ -131,11 +131,13 @@ function resetAll() {
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <UContainer class="py-8">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold mb-2">Ark Grid Solver</h1>
+        <h1 class="text-3xl font-bold mb-2">
+          Ark Grid Solver
+        </h1>
         <p class="text-gray-600 dark:text-gray-400">
           Optimize your astrogem assignments for maximum breakpoints
         </p>
-        <p class ="text-gray-800 dark:text-gray-600">
+        <p class="text-gray-800 dark:text-gray-600">
           by poyo age 6
         </p>
       </div>
@@ -155,7 +157,12 @@ function resetAll() {
             <h2 class="text-xl font-semibold flex items-center gap-2">
               <UIcon name="i-lucide-hexagon" />
               Cores
-              <UBadge color="neutral" variant="subtle">{{ cores.length }}/6</UBadge>
+              <UBadge
+                color="neutral"
+                variant="subtle"
+              >
+                {{ cores.length }}/6
+              </UBadge>
             </h2>
             <UButton
               icon="i-lucide-plus"
@@ -167,10 +174,21 @@ function resetAll() {
             </UButton>
           </div>
 
-          <div v-if="cores.length === 0" class="text-center py-12 border-2 border-dashed rounded-lg">
-            <UIcon name="i-lucide-hexagon" class="size-12 text-gray-400 mb-2" />
-            <p class="text-gray-500">No cores added yet</p>
-            <UButton class="mt-4" @click="addCore">
+          <div
+            v-if="cores.length === 0"
+            class="text-center py-12 border-2 border-dashed rounded-lg"
+          >
+            <UIcon
+              name="i-lucide-hexagon"
+              class="size-12 text-gray-400 mb-2"
+            />
+            <p class="text-gray-500">
+              No cores added yet
+            </p>
+            <UButton
+              class="mt-4"
+              @click="addCore"
+            >
               Add Your First Core
             </UButton>
           </div>
@@ -193,20 +211,34 @@ function resetAll() {
             <h2 class="text-xl font-semibold flex items-center gap-2">
               <UIcon name="i-lucide-gem" />
               Astrogems
-              <UBadge color="neutral" variant="subtle">{{ astrogems.length }}</UBadge>
+              <UBadge
+                color="neutral"
+                variant="subtle"
+              >
+                {{ astrogems.length }}
+              </UBadge>
             </h2>
           </div>
 
-          <div v-if="astrogems.length > 0" class="grid grid-cols-2 gap-4">
+          <div
+            v-if="astrogems.length > 0"
+            class="grid grid-cols-2 gap-4"
+          >
             <UCard>
               <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-gem" class="text-red-500" />
+                <UIcon
+                  name="i-lucide-gem"
+                  class="text-red-500"
+                />
                 <span class="font-medium">Order: {{ orderAstrogems.length }}</span>
               </div>
             </UCard>
             <UCard>
               <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-gem" class="text-blue-500" />
+                <UIcon
+                  name="i-lucide-gem"
+                  class="text-blue-500"
+                />
                 <span class="font-medium">Chaos: {{ chaosAstrogems.length }}</span>
               </div>
             </UCard>
@@ -225,7 +257,10 @@ function resetAll() {
               class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-40"
               @click="showAddGemModal = true"
             >
-              <UIcon name="i-lucide-plus" class="size-8 text-gray-400 mb-2" />
+              <UIcon
+                name="i-lucide-plus"
+                class="size-8 text-gray-400 mb-2"
+              />
               <span class="text-sm text-gray-500">Add Astrogem</span>
             </div>
           </div>
@@ -237,7 +272,9 @@ function resetAll() {
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold">Add New Astrogem</h3>
+                <h3 class="text-lg font-semibold">
+                  Add New Astrogem
+                </h3>
                 <UButton
                   icon="i-lucide-x"
                   color="neutral"
@@ -249,20 +286,28 @@ function resetAll() {
             </template>
 
             <div class="space-y-4">
-              <p class="text-gray-600 dark:text-gray-400">Select the astrogem category:</p>
+              <p class="text-gray-600 dark:text-gray-400">
+                Select the astrogem category:
+              </p>
               <div class="grid grid-cols-2 gap-4">
                 <button
                   class="p-6 rounded-lg border-2 border-red-400/50 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex flex-col items-center gap-2"
                   @click="addAstrogem('Order')"
                 >
-                  <UIcon name="i-lucide-gem" class="size-8 text-red-500" />
+                  <UIcon
+                    name="i-lucide-gem"
+                    class="size-8 text-red-500"
+                  />
                   <span class="font-medium">Order</span>
                 </button>
                 <button
                   class="p-6 rounded-lg border-2 border-blue-400/50 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex flex-col items-center gap-2"
                   @click="addAstrogem('Chaos')"
                 >
-                  <UIcon name="i-lucide-gem" class="size-8 text-blue-500" />
+                  <UIcon
+                    name="i-lucide-gem"
+                    class="size-8 text-blue-500"
+                  />
                   <span class="font-medium">Chaos</span>
                 </button>
               </div>
@@ -292,15 +337,25 @@ function resetAll() {
         </UButton>
       </div>
 
-      <div v-if="showResults" id="optimization-results" class="mt-8">
+      <div
+        v-if="showResults"
+        id="optimization-results"
+        class="mt-8"
+      >
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-semibold flex items-center gap-2">
-                <UIcon name="i-lucide-trophy" class="text-yellow-500" />
+                <UIcon
+                  name="i-lucide-trophy"
+                  class="text-yellow-500"
+                />
                 Optimization Results
               </h3>
-              <UBadge color="success" size="lg">
+              <UBadge
+                color="success"
+                size="lg"
+              >
                 Score: {{ totalScore.toFixed(1) }} / {{ maxPossible.toFixed(1) }}
               </UBadge>
             </div>
@@ -312,30 +367,40 @@ function resetAll() {
                 <div class="text-2xl font-bold">
                   {{ results.filter(r => r.breakpointsHit.includes(17)).length }}
                 </div>
-                <div class="text-sm text-gray-500">17p Reached</div>
+                <div class="text-sm text-gray-500">
+                  17p Reached
+                </div>
               </div>
               <div class="text-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <div class="text-2xl font-bold">
                   {{ results.filter(r => r.breakpointsHit.includes(14)).length }}
                 </div>
-                <div class="text-sm text-gray-500">14p Reached</div>
+                <div class="text-sm text-gray-500">
+                  14p Reached
+                </div>
               </div>
               <div class="text-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <div class="text-2xl font-bold">
                   {{ results.filter(r => r.breakpointsHit.includes(10)).length }}
                 </div>
-                <div class="text-sm text-gray-500">10p Reached</div>
+                <div class="text-sm text-gray-500">
+                  10p Reached
+                </div>
               </div>
               <div class="text-center p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
                 <div class="text-2xl font-bold">
                   {{ results.reduce((sum, r) => sum + r.astrogems.length, 0) }}
                 </div>
-                <div class="text-sm text-gray-500">Gems Used</div>
+                <div class="text-sm text-gray-500">
+                  Gems Used
+                </div>
               </div>
             </div>
 
             <div class="space-y-3">
-              <h4 class="font-medium">Assignment Details:</h4>
+              <h4 class="font-medium">
+                Assignment Details:
+              </h4>
               <div
                 v-for="result in results"
                 :key="result.coreId"
@@ -347,18 +412,26 @@ function resetAll() {
                       :src="getCoreSimpleIcon(cores.find(c => c.id === result.coreId)?.type as CoreType)"
                       :alt="cores.find(c => c.id === result.coreId)?.type"
                       class="size-5"
-                    />
+                    >
                     <span class="font-medium">
                       {{ cores.find(c => c.id === result.coreId)?.type }}
                     </span>
                   </div>
                   <div class="flex flex-col items-end gap-0.5 text-sm text-gray-600 dark:text-gray-400">
                     <span class="flex items-center gap-1">
-                      <img src="/images/astrogem_willpower.png" class="size-3" alt="Willpower">
+                      <img
+                        src="/images/astrogem_willpower.png"
+                        class="size-3"
+                        alt="Willpower"
+                      >
                       {{ result.totalWillpower }} Willpower
                     </span>
                     <span class="flex items-center gap-1">
-                      <img src="/images/astrogem_point.png" class="size-3" alt="Core Points">
+                      <img
+                        src="/images/astrogem_point.png"
+                        class="size-3"
+                        alt="Core Points"
+                      >
                       {{ result.totalPoints }} Core Points
                     </span>
                   </div>
@@ -376,7 +449,10 @@ function resetAll() {
                   </UBadge>
                 </div>
 
-                <div v-if="result.astrogems.length > 0" class="flex flex-wrap gap-2">
+                <div
+                  v-if="result.astrogems.length > 0"
+                  class="flex flex-wrap gap-2"
+                >
                   <div
                     v-for="gem in result.astrogems"
                     :key="gem.id"
@@ -391,16 +467,27 @@ function resetAll() {
                       {{ gem.category }}
                     </span>
                     <span class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                      <img src="/images/astrogem_willpower.png" class="size-3" alt="Willpower">
+                      <img
+                        src="/images/astrogem_willpower.png"
+                        class="size-3"
+                        alt="Willpower"
+                      >
                       {{ gem.willpower }} Willpower
                     </span>
                     <span class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                      <img src="/images/astrogem_point.png" class="size-3" alt="Core Points">
+                      <img
+                        src="/images/astrogem_point.png"
+                        class="size-3"
+                        alt="Core Points"
+                      >
                       {{ gem.points }} Core Points
                     </span>
                   </div>
                 </div>
-                <div v-else class="text-sm text-gray-400 italic">
+                <div
+                  v-else
+                  class="text-sm text-gray-400 italic"
+                >
                   No astrogems assigned
                 </div>
               </div>

@@ -5,13 +5,13 @@ export default defineNuxtConfig({
   ],
 
   ssr: false,
-  
-  app: {
-    baseURL: '/ark-grid-solver/'
-  },
 
   devtools: {
     enabled: true
+  },
+
+  app: {
+    baseURL: '/ark-grid-solver/'
   },
 
   css: ['~/assets/css/main.css'],

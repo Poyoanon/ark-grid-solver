@@ -27,7 +27,7 @@ export interface SolverResult {
   score: number
 }
 
-export const CORE_CONFIG: Record<CoreRarity, { maxWillpower: number; breakpoints: number[] }> = {
+export const CORE_CONFIG: Record<CoreRarity, { maxWillpower: number, breakpoints: number[] }> = {
   Epic: { maxWillpower: 9, breakpoints: [10] },
   Legendary: { maxWillpower: 12, breakpoints: [10, 14] },
   Relic: { maxWillpower: 15, breakpoints: [10, 14, 17, 18, 19, 20] },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Core, CoreRarity, CoreType, Astrogem } from '~/types/arkgrid'
-import { CORE_CONFIG, CORE_ICONS, getCoreCategory, calculateTotalWillpower, calculateTotalPoints, getBreakpointsHit } from '~/types/arkgrid'
+import { CORE_CONFIG, CORE_ICONS, calculateTotalWillpower, calculateTotalPoints, getBreakpointsHit } from '~/types/arkgrid'
 
 const props = defineProps<{
   core: Core
@@ -38,7 +38,6 @@ const selectedType = computed({
   }
 })
 
-const coreCategory = computed(() => getCoreCategory(props.core.type))
 const maxWillpower = computed(() => CORE_CONFIG[props.core.rarity].maxWillpower)
 const breakpoints = computed(() => CORE_CONFIG[props.core.rarity].breakpoints)
 
@@ -79,7 +78,7 @@ function getBreakpointStatus(bp: number): 'hit' | 'next' | 'far' {
             :src="CORE_ICONS[core.type]"
             :alt="core.type"
             class="size-5"
-          />
+          >
           <span class="font-semibold">{{ core.type }}</span>
         </div>
         <UButton
@@ -114,7 +113,11 @@ function getBreakpointStatus(bp: number): 'hit' | 'next' | 'far' {
       <div class="space-y-1">
         <div class="flex justify-between text-sm">
           <span class="flex items-center gap-1">
-            <img src="/images/astrogem_willpower.png" class="size-4" alt="Willpower">
+            <img
+              src="/images/astrogem_willpower.png"
+              class="size-4"
+              alt="Willpower"
+            >
             Willpower
           </span>
           <span :class="isOverWillpower ? 'text-red-500 font-bold' : ''">
@@ -131,7 +134,11 @@ function getBreakpointStatus(bp: number): 'hit' | 'next' | 'far' {
       <div class="space-y-2">
         <div class="flex justify-between items-center">
           <span class="text-sm flex items-center gap-1">
-            <img src="/images/astrogem_point.png" class="size-4" alt="Core Points">
+            <img
+              src="/images/astrogem_point.png"
+              class="size-4"
+              alt="Core Points"
+            >
             Core Points
           </span>
           <span class="text-lg font-bold">{{ currentPoints }}</span>
@@ -155,8 +162,13 @@ function getBreakpointStatus(bp: number): 'hit' | 'next' | 'far' {
         </div>
       </div>
 
-      <div v-if="showResults && resultAstrogems && resultAstrogems.length > 0" class="space-y-2">
-        <div class="text-sm font-medium">Assigned Astrogems:</div>
+      <div
+        v-if="showResults && resultAstrogems && resultAstrogems.length > 0"
+        class="space-y-2"
+      >
+        <div class="text-sm font-medium">
+          Assigned Astrogems:
+        </div>
         <div class="space-y-1">
           <div
             v-for="gem in resultAstrogems"
@@ -172,18 +184,29 @@ function getBreakpointStatus(bp: number): 'hit' | 'next' | 'far' {
               {{ gem.category }}
             </span>
             <span class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <img src="/images/astrogem_willpower.png" class="size-3" alt="Willpower">
+              <img
+                src="/images/astrogem_willpower.png"
+                class="size-3"
+                alt="Willpower"
+              >
               {{ gem.willpower }} Willpower
             </span>
             <span class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <img src="/images/astrogem_point.png" class="size-3" alt="Core Points">
+              <img
+                src="/images/astrogem_point.png"
+                class="size-3"
+                alt="Core Points"
+              >
               {{ gem.points }} Core Points
             </span>
           </div>
         </div>
       </div>
 
-      <div v-if="!showResults" class="flex gap-1">
+      <div
+        v-if="!showResults"
+        class="flex gap-1"
+      >
         <div
           v-for="i in 4"
           :key="i"

@@ -42,7 +42,10 @@ const categoryColor = computed(() => {
         />
       </div>
 
-      <UFormField label="Category" size="sm">
+      <UFormField
+        label="Category"
+        size="sm"
+      >
         <USelect
           :model-value="astrogem.category"
           :items="categoryOptions"
@@ -55,7 +58,11 @@ const categoryColor = computed(() => {
         <UFormField size="sm">
           <template #label>
             <span class="flex items-center gap-1">
-              <img src="/images/astrogem_willpower.png" class="size-4" alt="Willpower">
+              <img
+                src="/images/astrogem_willpower.png"
+                class="size-4"
+                alt="Willpower"
+              >
               Willpower
             </span>
           </template>
@@ -73,7 +80,11 @@ const categoryColor = computed(() => {
         <UFormField size="sm">
           <template #label>
             <span class="flex items-center gap-1">
-              <img src="/images/astrogem_point.png" class="size-4" alt="Core Points">
+              <img
+                src="/images/astrogem_point.png"
+                class="size-4"
+                alt="Core Points"
+              >
               Core Points
             </span>
           </template>

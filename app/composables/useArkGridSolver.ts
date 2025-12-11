@@ -107,7 +107,7 @@ function solveCategoryOptimal(cores: Core[], astrogems: Astrogem[]): SolverResul
     }
   }
 
-  const sortedCores = [...cores].sort((a, b) => {
+  cores.sort((a, b) => {
     const rarityOrder: Record<CoreRarity, number> = { Ancient: 0, Relic: 1, Legendary: 2, Epic: 3 }
     return rarityOrder[a.rarity] - rarityOrder[b.rarity]
   })

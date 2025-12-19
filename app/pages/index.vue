@@ -5,7 +5,7 @@ import { createEmptyCore, createEmptyAstrogem, getCoreSimpleIcon, generateId } f
 const config = useRuntimeConfig()
 const baseURL = config.app.baseURL
 
-const { solveArkGrid, getMaxPossibleScore, getDestinyBonus } = useArkGridSolver()
+const { solveArkGridAsync, getMaxPossibleScore, getDestinyBonus } = useArkGridSolver()
 
 const STORAGE_KEY_CHARACTERS = 'arkgrid-characters'
 const STORAGE_KEY_ACTIVE_CHARACTER = 'arkgrid-active-character'
@@ -196,14 +196,16 @@ async function calculate() {
   isCalculating.value = true
   showResults.value = false
 
-  await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)))
-
   try {
-    results.value = solveArkGrid(cores.value, astrogems.value)
+    const plainCores = JSON.parse(JSON.stringify(cores.value))
+    const plainAstrogems = JSON.parse(JSON.stringify(astrogems.value))
+    results.value = await solveArkGridAsync(plainCores, plainAstrogems, baseURL)
     showResults.value = true
 
     await nextTick()
     document.getElementById('optimization-results')?.scrollIntoView({ behavior: 'smooth' })
+  } catch (error) {
+    console.error('Solver error:', error)
   } finally {
     isCalculating.value = false
   }
@@ -560,6 +562,24 @@ function resetAll() {
           >
             Reset All
           </UButton>
+        </div>
+
+        <div
+          v-if="isCalculating"
+          class="flex flex-col items-center gap-3 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+        >
+          <div class="flex items-center gap-3">
+            <UIcon
+              name="i-lucide-loader-2"
+              class="w-6 h-6 text-blue-500 animate-spin"
+            />
+            <span class="text-lg font-medium text-blue-700 dark:text-blue-300">
+              Calculating optimal assignments...
+            </span>
+          </div>
+          <p class="text-sm text-blue-600 dark:text-blue-400 text-center max-w-md">
+            This may take a few seconds depending on the number of astrogems. The page will remain responsive while calculating.
+          </p>
         </div>
       </div>
 

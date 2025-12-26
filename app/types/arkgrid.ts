@@ -90,8 +90,8 @@ export function createEmptyAstrogem(category: AstrogemCategory): Astrogem {
     id: generateId(),
     name: '',
     category,
-    willpower: 0,
-    points: 0,
+    willpower: 3,
+    points: 3,
     quantity: 1
   }
 }

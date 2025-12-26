@@ -30,15 +30,15 @@ const newCharacterName = ref('')
 const editingCharacterName = ref(false)
 const editedName = ref('')
 
-type AstrogemSortOption = 'none' | 'willpower-high' | 'willpower-low' | 'points-high' | 'points-low'
-const astrogemSort = ref<AstrogemSortOption>('none')
-const astrogemSortOptions = [
-  { label: 'Default', value: 'none' },
-  { label: 'Willpower (High → Low)', value: 'willpower-high' },
-  { label: 'Willpower (Low → High)', value: 'willpower-low' },
-  { label: 'Core Points (High → Low)', value: 'points-high' },
-  { label: 'Core Points (Low → High)', value: 'points-low' }
-]
+type AstrogemFilter = 'all' | 'order' | 'chaos'
+type WillpowerSort = 'asc' | 'desc'
+type PointsSort = 'asc' | 'desc'
+
+const astrogemFilter = ref<AstrogemFilter>('all')
+const willpowerSort = ref<WillpowerSort>('asc')
+const pointsSort = ref<PointsSort>('desc')
+const editingGemIds = ref<Set<string>>(new Set())
+const preservedOrder = ref<Map<string, number>>(new Map())
 
 const activeCharacter = computed(() => {
   return characters.value.find(c => c.id === activeCharacterId.value)
@@ -190,6 +190,18 @@ function updateAstrogemById(id: string, gem: Astrogem) {
   }
 }
 
+function updateAstrogemField(id: string, field: keyof Astrogem, value: any) {
+  if (!activeCharacter.value) return
+  const index = activeCharacter.value.astrogems.findIndex(g => g.id === id)
+  if (index !== -1) {
+    activeCharacter.value.astrogems[index] = {
+      ...activeCharacter.value.astrogems[index],
+      [field]: value
+    }
+    showResults.value = false
+  }
+}
+
 async function calculate() {
   if (cores.value.length === 0 || astrogems.value.length === 0) return
 
@@ -215,24 +227,125 @@ function getResultForCore(coreId: string): SolverResult | undefined {
   return results.value.find(r => r.coreId === coreId)
 }
 
-const sortedAstrogems = computed(() => {
-  const gems = [...astrogems.value]
-  switch (astrogemSort.value) {
-    case 'willpower-high':
-      return gems.sort((a, b) => b.willpower - a.willpower)
-    case 'willpower-low':
-      return gems.sort((a, b) => a.willpower - b.willpower)
-    case 'points-high':
-      return gems.sort((a, b) => b.points - a.points)
-    case 'points-low':
-      return gems.sort((a, b) => a.points - b.points)
-    default:
-      return gems
+const filteredAstrogems = computed(() => {
+  let gems = [...astrogems.value]
+  
+  // Apply category filter
+  if (astrogemFilter.value === 'order') {
+    gems = gems.filter(g => g.category === 'Order')
+  } else if (astrogemFilter.value === 'chaos') {
+    gems = gems.filter(g => g.category === 'Chaos')
   }
+  
+  return gems
 })
+
+const sortedAstrogems = computed(() => {
+  const gems = [...filteredAstrogems.value]
+  
+  // If any gem is being edited, preserve their current order
+  if (editingGemIds.value.size > 0) {
+    // Use preserved order if available
+    if (preservedOrder.value.size > 0) {
+      const sorted = gems.slice().sort((a, b) => {
+        const orderA = preservedOrder.value.get(a.id) ?? Infinity
+        const orderB = preservedOrder.value.get(b.id) ?? Infinity
+        return orderA - orderB
+      })
+      return sorted
+    }
+    // If no preserved order yet, return as-is (will be preserved on next render)
+    return gems
+  }
+  
+  // Clear preserved order when not editing
+  if (preservedOrder.value.size > 0) {
+    preservedOrder.value.clear()
+  }
+  
+  // Primary sort: Willpower
+  if (willpowerSort.value === 'asc') {
+    gems.sort((a, b) => {
+      const willDiff = a.willpower - b.willpower
+      if (willDiff !== 0) return willDiff
+      // Secondary sort: Points
+      if (pointsSort.value === 'asc') return a.points - b.points
+      if (pointsSort.value === 'desc') return b.points - a.points
+      return 0
+    })
+  } else {
+    gems.sort((a, b) => {
+      const willDiff = b.willpower - a.willpower
+      if (willDiff !== 0) return willDiff
+      // Secondary sort: Points
+      if (pointsSort.value === 'asc') return a.points - b.points
+      if (pointsSort.value === 'desc') return b.points - a.points
+      return 0
+    })
+  }
+  
+  return gems
+})
+
+function startEditingGem(gemId: string) {
+  // If this is the first gem being edited, preserve the current order BEFORE adding to editing set
+  if (editingGemIds.value.size === 0) {
+    // Get the current sorted order before we mark anything as editing
+    const currentGems = filteredAstrogems.value.slice()
+    
+    // Apply current sorting to get the order
+    if (willpowerSort.value === 'asc') {
+      currentGems.sort((a, b) => {
+        const willDiff = a.willpower - b.willpower
+        if (willDiff !== 0) return willDiff
+        if (pointsSort.value === 'asc') return a.points - b.points
+        if (pointsSort.value === 'desc') return b.points - a.points
+        return 0
+      })
+    } else {
+      currentGems.sort((a, b) => {
+        const willDiff = b.willpower - a.willpower
+        if (willDiff !== 0) return willDiff
+        if (pointsSort.value === 'asc') return a.points - b.points
+        if (pointsSort.value === 'desc') return b.points - a.points
+        return 0
+      })
+    }
+    
+    // Store the order
+    currentGems.forEach((gem, index) => {
+      preservedOrder.value.set(gem.id, index)
+    })
+  }
+  editingGemIds.value.add(gemId)
+}
+
+function stopEditingGem(gemId: string) {
+  // Small delay to allow focus event to fire first when tabbing between inputs
+  setTimeout(() => {
+    // Check if focus moved to another input (could be on same gem or different gem)
+    const activeElement = document.activeElement
+    if (activeElement && activeElement.tagName === 'INPUT') {
+      // Focus moved to another input, keep the gem in editing state
+      // The new input's focus handler will ensure it stays in the set
+      return
+    }
+    // No input is focused, safe to remove from editing set
+    editingGemIds.value.delete(gemId)
+    
+    // If no gems are being edited anymore, clear preserved order
+    if (editingGemIds.value.size === 0) {
+      preservedOrder.value.clear()
+    }
+  }, 50)
+}
 
 const orderAstrogems = computed(() => astrogems.value.filter(g => g.category === 'Order'))
 const chaosAstrogems = computed(() => astrogems.value.filter(g => g.category === 'Chaos'))
+
+const totalAstrogemCount = computed(() => {
+  return astrogems.value.reduce((sum, gem) => sum + (gem.quantity ?? 1), 0)
+})
 
 const totalScore = computed(() => {
   const baseScore = results.value.reduce((sum, r) => sum + r.score, 0)
@@ -425,71 +538,224 @@ function resetAll() {
                 color="neutral"
                 variant="subtle"
               >
-                {{ astrogems.length }}
+                {{ totalAstrogemCount }}
               </UBadge>
             </h2>
-            <div
-              v-if="astrogems.length > 1"
-              class="flex items-center gap-2"
-            >
-              <UIcon
-                name="i-lucide-arrow-up-down"
-                class="size-4 text-gray-500"
-              />
-              <USelect
-                v-model="astrogemSort"
-                :items="astrogemSortOptions"
-                value-key="value"
-                size="sm"
-                class="w-48"
-              />
-            </div>
-          </div>
-
-          <div
-            v-if="astrogems.length > 0"
-            class="grid grid-cols-2 gap-4"
-          >
-            <UCard>
-              <div class="flex items-center gap-2">
-                <UIcon
-                  name="i-lucide-gem"
-                  class="text-red-500"
-                />
-                <span class="font-medium">Order: {{ orderAstrogems.length }}</span>
-              </div>
-            </UCard>
-            <UCard>
-              <div class="flex items-center gap-2">
-                <UIcon
-                  name="i-lucide-gem"
-                  class="text-blue-500"
-                />
-                <span class="font-medium">Chaos: {{ chaosAstrogems.length }}</span>
-              </div>
-            </UCard>
-          </div>
-
-          <div class="grid sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto">
-            <AstrogemCard
-              v-for="gem in sortedAstrogems"
-              :key="gem.id"
-              :astrogem="gem"
-              @update:astrogem="updateAstrogemById(gem.id, $event)"
-              @remove="removeAstrogemById(gem.id)"
-            />
-
-            <div
-              class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-40"
+            <UButton
+              icon="i-lucide-plus"
+              size="sm"
               @click="showAddGemModal = true"
             >
-              <UIcon
-                name="i-lucide-plus"
-                class="size-8 text-gray-400 mb-2"
-              />
-              <span class="text-sm text-gray-500">Add Astrogem</span>
+              Add Astrogem
+            </UButton>
+          </div>
+
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600 dark:text-gray-400">Filter:</span>
+              <div class="flex gap-1">
+                <UButton
+                  :color="astrogemFilter === 'all' ? 'primary' : 'neutral'"
+                  :variant="astrogemFilter === 'all' ? 'solid' : 'outline'"
+                  size="xs"
+                  @click="astrogemFilter = 'all'"
+                >
+                  All
+                </UButton>
+                <UButton
+                  :color="astrogemFilter === 'order' ? 'red' : 'neutral'"
+                  :variant="astrogemFilter === 'order' ? 'solid' : 'outline'"
+                  size="xs"
+                  @click="astrogemFilter = 'order'"
+                >
+                  Order
+                </UButton>
+                <UButton
+                  :color="astrogemFilter === 'chaos' ? 'blue' : 'neutral'"
+                  :variant="astrogemFilter === 'chaos' ? 'solid' : 'outline'"
+                  size="xs"
+                  @click="astrogemFilter = 'chaos'"
+                >
+                  Chaos
+                </UButton>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600 dark:text-gray-400">Sort:</span>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-500 mr-1">Willpower</span>
+                <UButton
+                  color="primary"
+                  variant="solid"
+                  size="xs"
+                  @click="willpowerSort = willpowerSort === 'asc' ? 'desc' : 'asc'"
+                >
+                  <UIcon
+                    :name="willpowerSort === 'asc' ? 'i-fa-solid-sort-amount-up-alt' : 'i-fa-solid-sort-amount-down-alt'"
+                    class="size-4"
+                  />
+                </UButton>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-500 mr-1">Points</span>
+                <UButton
+                  color="primary"
+                  variant="solid"
+                  size="xs"
+                  @click="pointsSort = pointsSort === 'asc' ? 'desc' : 'asc'"
+                >
+                  <UIcon
+                    :name="pointsSort === 'asc' ? 'i-fa-solid-sort-amount-up-alt' : 'i-fa-solid-sort-amount-down-alt'"
+                    class="size-4"
+                  />
+                </UButton>
+              </div>
             </div>
           </div>
+
+          <UCard>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="text-left py-3 px-4 font-semibold text-sm">
+                      GEM
+                    </th>
+                    <th class="text-left py-3 px-4 font-semibold text-sm">
+                      WILL
+                    </th>
+                    <th class="text-left py-3 px-4 font-semibold text-sm">
+                      PTS
+                    </th>
+                    <th class="text-left py-3 px-4 font-semibold text-sm">
+                      QTY
+                    </th>
+                    <th class="text-right py-3 px-4 font-semibold text-sm w-16">
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="gem in sortedAstrogems"
+                    :key="gem.id"
+                    class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  >
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <UIcon
+                          name="i-lucide-gem"
+                          :class="gem.category === 'Order' ? 'text-red-500' : 'text-blue-500'"
+                          class="size-4"
+                        />
+                        <span
+                          class="font-medium"
+                          :class="gem.category === 'Order' ? 'text-red-500' : 'text-blue-500'"
+                        >
+                          {{ gem.category }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4">
+                      <UInput
+                        type="number"
+                        :model-value="gem.willpower"
+                        :min="3"
+                        :max="10"
+                        size="sm"
+                        class="w-24"
+                        @mousedown="startEditingGem(gem.id)"
+                        @focus="startEditingGem(gem.id)"
+                        @blur="stopEditingGem(gem.id)"
+                        @update:model-value="updateAstrogemField(gem.id, 'willpower', Number($event) || 0)"
+                      />
+                    </td>
+                    <td class="py-3 px-4">
+                      <UInput
+                        type="number"
+                        :model-value="gem.points"
+                        :min="1"
+                        :max="5"
+                        size="sm"
+                        class="w-24"
+                        @mousedown="startEditingGem(gem.id)"
+                        @focus="startEditingGem(gem.id)"
+                        @blur="stopEditingGem(gem.id)"
+                        @update:model-value="updateAstrogemField(gem.id, 'points', Number($event) || 0)"
+                      />
+                    </td>
+                    <td class="py-3 px-4">
+                      <UInput
+                        type="number"
+                        :model-value="gem.quantity ?? 1"
+                        :min="1"
+                        size="sm"
+                        class="w-24"
+                        @update:model-value="updateAstrogemField(gem.id, 'quantity', Math.max(1, Number($event) || 1))"
+                      />
+                    </td>
+                    <td class="py-3 px-4">
+                      <div class="flex justify-end">
+                        <UButton
+                          icon="i-lucide-x"
+                          color="error"
+                          variant="ghost"
+                          size="xs"
+                          @click="removeAstrogemById(gem.id)"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                  <tr
+                    v-if="sortedAstrogems.length === 0"
+                    class="border-b border-gray-100 dark:border-gray-800"
+                  >
+                    <td
+                      colspan="5"
+                      class="py-8 px-4 text-center text-gray-500 dark:text-gray-400"
+                    >
+                      <template v-if="astrogems.length === 0">
+                        No astrogems added yet. Click "Add Astrogem" to get started.
+                      </template>
+                      <template v-else>
+                        No astrogems match the current filter.
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              v-if="astrogems.length > 0"
+              class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4 text-sm"
+            >
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-lucide-gem"
+                  class="text-red-500 size-4"
+                />
+                <span class="text-gray-600 dark:text-gray-400">
+                  Order: <span class="font-medium">{{ orderAstrogems.length }}</span>
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-lucide-gem"
+                  class="text-blue-500 size-4"
+                />
+                <span class="text-gray-600 dark:text-gray-400">
+                  Chaos: <span class="font-medium">{{ chaosAstrogems.length }}</span>
+                </span>
+              </div>
+              <div
+                v-if="astrogemFilter !== 'all'"
+                class="ml-auto text-xs text-gray-500"
+              >
+                Showing {{ sortedAstrogems.length }} of {{ astrogems.length }}
+              </div>
+            </div>
+          </UCard>
         </div>
       </div>
 

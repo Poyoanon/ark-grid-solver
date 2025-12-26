@@ -26,6 +26,8 @@ const showAddGemModal = ref(false)
 const showResetModal = ref(false)
 const showAddCharacterModal = ref(false)
 const showDeleteCharacterModal = ref(false)
+const showDuplicateGemModal = ref(false)
+const duplicateGemInfo = ref<{ currentId: string, existingId: string, willpower: number, points: number, category: AstrogemCategory, existingQuantity: number } | null>(null)
 const newCharacterName = ref('')
 const editingCharacterName = ref(false)
 const editedName = ref('')
@@ -193,13 +195,82 @@ function updateAstrogemById(id: string, gem: Astrogem) {
 function updateAstrogemField(id: string, field: keyof Astrogem, value: any) {
   if (!activeCharacter.value) return
   const index = activeCharacter.value.astrogems.findIndex(g => g.id === id)
+  if (index === -1) return
+  
+  const updatedGem = {
+    ...activeCharacter.value.astrogems[index],
+    [field]: value
+  }
+  
+  // Check for duplicates when both willpower and points are set (and both > 0)
+  if ((field === 'willpower' || field === 'points') && updatedGem.willpower > 0 && updatedGem.points > 0) {
+    const duplicate = activeCharacter.value.astrogems.find(
+      g => g.id !== id &&
+           g.category === updatedGem.category &&
+           g.willpower === updatedGem.willpower &&
+           g.points === updatedGem.points
+    )
+    
+    if (duplicate) {
+      // Store info for confirmation modal
+      duplicateGemInfo.value = {
+        currentId: id,
+        existingId: duplicate.id,
+        willpower: updatedGem.willpower,
+        points: updatedGem.points,
+        category: updatedGem.category,
+        existingQuantity: duplicate.quantity ?? 1
+      }
+      showDuplicateGemModal.value = true
+      return // Don't update yet, wait for user confirmation
+    }
+  }
+  
+  // No duplicate found, proceed with update
+  activeCharacter.value.astrogems[index] = updatedGem
+  showResults.value = false
+}
+
+function mergeDuplicateGem() {
+  if (!activeCharacter.value || !duplicateGemInfo.value) return
+  
+  const { currentId, existingId, existingQuantity } = duplicateGemInfo.value
+  
+  // Find the existing gem and increment its quantity
+  const existingIndex = activeCharacter.value.astrogems.findIndex(g => g.id === existingId)
+  if (existingIndex !== -1) {
+    activeCharacter.value.astrogems[existingIndex].quantity = (existingQuantity + 1)
+  }
+  
+  // Remove the duplicate gem
+  const currentIndex = activeCharacter.value.astrogems.findIndex(g => g.id === currentId)
+  if (currentIndex !== -1) {
+    activeCharacter.value.astrogems.splice(currentIndex, 1)
+  }
+  
+  showResults.value = false
+  showDuplicateGemModal.value = false
+  duplicateGemInfo.value = null
+}
+
+function keepDuplicateGem() {
+  if (!activeCharacter.value || !duplicateGemInfo.value) return
+  
+  const { currentId, willpower, points } = duplicateGemInfo.value
+  
+  // Update the gem with the values (user wants to keep it separate)
+  const index = activeCharacter.value.astrogems.findIndex(g => g.id === currentId)
   if (index !== -1) {
     activeCharacter.value.astrogems[index] = {
       ...activeCharacter.value.astrogems[index],
-      [field]: value
+      willpower,
+      points
     }
-    showResults.value = false
   }
+  
+  showResults.value = false
+  showDuplicateGemModal.value = false
+  duplicateGemInfo.value = null
 }
 
 async function calculate() {
@@ -660,10 +731,11 @@ function resetAll() {
                       <UInput
                         type="number"
                         :model-value="gem.willpower"
-                        :min="3"
+                        :min="0"
                         :max="10"
                         size="sm"
                         class="w-24"
+                        placeholder="Will"
                         @mousedown="startEditingGem(gem.id)"
                         @focus="startEditingGem(gem.id)"
                         @blur="stopEditingGem(gem.id)"
@@ -674,10 +746,11 @@ function resetAll() {
                       <UInput
                         type="number"
                         :model-value="gem.points"
-                        :min="1"
+                        :min="0"
                         :max="5"
                         size="sm"
                         class="w-24"
+                        placeholder="Pts"
                         @mousedown="startEditingGem(gem.id)"
                         @focus="startEditingGem(gem.id)"
                         @blur="stopEditingGem(gem.id)"
@@ -802,6 +875,66 @@ function resetAll() {
                   />
                   <span class="font-medium">Chaos</span>
                 </button>
+              </div>
+            </div>
+          </UCard>
+        </template>
+      </UModal>
+
+      <UModal v-model:open="showDuplicateGemModal">
+        <template #content>
+          <UCard>
+            <template #header>
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold">
+                  Duplicate Astrogem Detected
+                </h3>
+                <UButton
+                  icon="i-lucide-x"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  @click="keepDuplicateGem"
+                />
+              </div>
+            </template>
+
+            <div class="space-y-4">
+              <p class="text-gray-600 dark:text-gray-400">
+                You are about to add a gem that already exists:
+              </p>
+              <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div class="flex items-center gap-2 mb-2">
+                  <UIcon
+                    name="i-lucide-gem"
+                    :class="duplicateGemInfo?.category === 'Order' ? 'text-red-500' : 'text-blue-500'"
+                    class="size-5"
+                  />
+                  <span class="font-medium">
+                    {{ duplicateGemInfo?.category }} - Willpower: {{ duplicateGemInfo?.willpower }}, Points: {{ duplicateGemInfo?.points }}
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  You currently have <span class="font-semibold">{{ duplicateGemInfo?.existingQuantity }}</span> of that type.
+                </p>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400">
+                Would you like to add to its quantity instead?
+              </p>
+              <div class="flex gap-3 justify-end">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  @click="keepDuplicateGem"
+                >
+                  Keep Separate
+                </UButton>
+                <UButton
+                  color="primary"
+                  @click="mergeDuplicateGem"
+                >
+                  Add to Quantity
+                </UButton>
               </div>
             </div>
           </UCard>

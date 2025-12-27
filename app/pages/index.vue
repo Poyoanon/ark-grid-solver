@@ -183,11 +183,11 @@ function confirmAddToQuantity() {
   // Find the existing duplicate gem
   const existingGem = activeCharacter.value.astrogems.find(
     g => g.category === duplicateGemInfo.value.gem!.category
-         && g.willpower === duplicateGemInfo.value.gem!.willpower
-         && g.points === duplicateGemInfo.value.gem!.points
-         && g.willpower !== null
-         && g.points !== null
-         && g.id !== duplicateGemInfo.value.gem!.id
+      && g.willpower === duplicateGemInfo.value.gem!.willpower
+      && g.points === duplicateGemInfo.value.gem!.points
+      && g.willpower !== null
+      && g.points !== null
+      && g.id !== duplicateGemInfo.value.gem!.id
   )
 
   if (existingGem) {
@@ -253,11 +253,11 @@ function updateAstrogemField(id: string, field: keyof Astrogem, value: number | 
     if (willpower !== null && points !== null && willpower > 0 && points > 0) {
       const duplicateGem = activeCharacter.value.astrogems.find(
         (g, idx) => idx !== index
-                    && g.category === gem.category
-                    && g.willpower === willpower
-                    && g.points === points
-                    && g.willpower !== null
-                    && g.points !== null
+          && g.category === gem.category
+          && g.willpower === willpower
+          && g.points === points
+          && g.willpower !== null
+          && g.points !== null
       )
 
       if (duplicateGem) {
@@ -310,7 +310,7 @@ function getResultForCore(coreId: string): SolverResult | undefined {
 
 const filteredAstrogems = computed(() => {
   let gems = [...astrogems.value]
-  
+
   // Apply category filter
   if (astrogemFilter.value === 'order') {
     gems = gems.filter(g => g.category === 'Order')
@@ -418,7 +418,7 @@ function startEditingGem(gemId: string) {
         return 0
       })
     }
-    
+
     // Store the order
     currentGems.forEach((gem, index) => {
       preservedOrder.value.set(gem.id, index)

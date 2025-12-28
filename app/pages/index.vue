@@ -445,8 +445,13 @@ function stopEditingGem(gemId: string) {
     editingGemIds.value.delete(gemId)
 
     // If no gems are being edited anymore, clear preserved order
+    // Create a new Set to ensure Vue reactivity detects the change
     if (editingGemIds.value.size === 0) {
       preservedOrder.value.clear()
+      editingGemIds.value = new Set()
+    } else {
+      // Create a new Set to ensure reactivity
+      editingGemIds.value = new Set(editingGemIds.value)
     }
   }, 50)
 }

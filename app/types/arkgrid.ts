@@ -6,8 +6,8 @@ export interface Astrogem {
   id: string
   name: string
   category: AstrogemCategory
-  willpower: number
-  points: number
+  willpower: number | null
+  points: number | null
   quantity?: number
 }
 
@@ -90,8 +90,8 @@ export function createEmptyAstrogem(category: AstrogemCategory): Astrogem {
     id: generateId(),
     name: '',
     category,
-    willpower: 0,
-    points: 0,
+    willpower: null,
+    points: null,
     quantity: 1
   }
 }
@@ -109,11 +109,11 @@ export function getBreakpoints(rarity: CoreRarity): number[] {
 }
 
 export function calculateTotalWillpower(astrogems: Astrogem[]): number {
-  return astrogems.reduce((sum, gem) => sum + gem.willpower, 0)
+  return astrogems.reduce((sum, gem) => sum + (gem.willpower ?? 0), 0)
 }
 
 export function calculateTotalPoints(astrogems: Astrogem[]): number {
-  return astrogems.reduce((sum, gem) => sum + gem.points, 0)
+  return astrogems.reduce((sum, gem) => sum + (gem.points ?? 0), 0)
 }
 
 export function getBreakpointsHit(points: number, rarity: CoreRarity): number[] {

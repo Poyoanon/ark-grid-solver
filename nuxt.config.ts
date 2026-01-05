@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
+  // Static site generation for GitHub Pages
   ssr: false,
 
   devtools: {
@@ -11,7 +12,12 @@ export default defineNuxtConfig({
   },
 
   app: {
-    baseURL: '/ark-grid-solver/'
+    baseURL: '/ark-grid-solver/',
+    head: {
+      htmlAttrs: {
+        lang: 'en'
+      }
+    }
   },
 
   css: ['~/assets/css/main.css'],
